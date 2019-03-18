@@ -2,6 +2,7 @@
 import pandas as pd
 import copy
 import datetime
+import os
 
 
 build_log = {}
@@ -75,7 +76,7 @@ def read_excel_by_pandas(excel_name, sheet_name, output_file_name):
                 produce_set.add(row['物料编码'])
             #     build_log2[row["物料编码"]] = False
             # print(row['上级物料编码'], row['补给方式'])
-        print("bom list has " + str(item_counter) + " items, and totally " + str(len(build_log)) + " BOMs.")
+        print("bom list has {0} items, and totally {1} BOMs.".format(item_counter, len(build_log)))
         # print(item_counter, len(build_log2))
         for index, row in df.iterrows():
             item_counter += 1
@@ -93,19 +94,19 @@ def read_excel_by_pandas(excel_name, sheet_name, output_file_name):
             iter_level(k, f, bom, k, 0, 1)
             # break
         f.close()
-    except FileNotFoundError:
-        print(excel_name + " not found")
-    except Exception:
-        print("Unknown Exception")
+    except FileNotFoundError as e:
+        print("{0} not found: {1}".format(excel_name, e))
+    except Exception as e:
+        print("Unknown Exception: {0}".format(e))
 
 
 def transfer_csv_to_excel(input_file_path, output_file_name, sheet_name):
     try:
         df_new = pd.read_csv(input_file_path)
-        print(df_new['currency'].describe())
-        print(df_new['currency'].value_counts())
+        # print(df_new['currency'].describe())
+        # print(df_new['currency'].value_counts())
         writer = pd.ExcelWriter(output_file_name, engine='xlsxwriter', options={'strings_to_numbers': True})
-        df_new.to_excel(writer, index=False, sheet_name='Sheet1')
+        df_new.to_excel(writer, index=False, sheet_name=sheet_name)
         # workbook = writer.book
         # worksheet = writer.sheets['Sheet1']
         # format1 = workbook.add_format({'num_format': '#,###0.000'})
@@ -114,20 +115,42 @@ def transfer_csv_to_excel(input_file_path, output_file_name, sheet_name):
         # worksheet.set_column('H:H', None, format1)
         # worksheet.set_column('K:K', None, format1)
         writer.save()
-    except Exception:
-        print("Unknown Exception")
+    except FileNotFoundError as e:
+        print("上一步骤未完成，中断执行：{0}".format(e))
+    except Exception as e:
+        print("Unknown Exception: {0}".format(e))
+
+
+def delete_origin_output_if_exists(filepath):
+    try:
+        if os.path.exists(filepath) and os.path.isfile(filepath):
+            os.remove(filepath)
+        else:
+            print("未找到文件：{0}".format(filepath))
+    except Exception as e:
+        print("Unknown Exception: {0}".format(e))
 
 
 if __name__ == '__main__':
-    print("Processing Start")
+    INPUT_FILE_PATH = "input.xlsx"
+    INPUT_FILE_SHEET = "Sheet1"
+    MIDDLE_FILE_PATH = "output.csv"
+    OUTPUT_FILE_PATH = "output.xlsx"
+    OUTPUT_FILE_SHEET = "Sheet1"
+    print("Process Start")
     print(str(datetime.datetime.now()))
     print("****************")
+    print("删除文件【{0}】".format(MIDDLE_FILE_PATH))
+    delete_origin_output_if_exists(MIDDLE_FILE_PATH)
+    print("删除文件【{0}】".format(OUTPUT_FILE_PATH))
+    delete_origin_output_if_exists(OUTPUT_FILE_PATH)
+    print("****************")
     print("Start to Calculate BOM")
-    read_excel_by_pandas("input.xlsx", "Sheet1", "output.csv")
+    read_excel_by_pandas(INPUT_FILE_PATH, INPUT_FILE_SHEET, MIDDLE_FILE_PATH)
     print("Finished")
     print("****************")
     print("Start to Transfer CSV to Excel")
-    transfer_csv_to_excel('output.csv', "output.xlsx", "Sheet1")
-    print("Finished")
+    transfer_csv_to_excel(MIDDLE_FILE_PATH, OUTPUT_FILE_PATH, OUTPUT_FILE_SHEET)
+    print("Process Finished")
     print("****************")
     input("Press Enter to continue...")
