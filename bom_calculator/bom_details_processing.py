@@ -1,12 +1,12 @@
 
 import pandas as pd
 import copy
-from .bom_utils import get_str
+from bom_calculator.bom_utils import get_str
 
 
 def create_node_from_row(r, usd_ratio):
-    # 物料编码	物料名称	原厂料号	补给方式	首选供应商	物料分类二	物料分类三	计量单位	上级物料编码	上级物料名称	总消耗量	损耗量	标准损耗率	采购价格	采购货币
-    total_price_rmb = r.采购价格 * r.总消耗量 * usd_ratio if r.采购货币 == 'USD' else r.采购价格 * r.总消耗量
+    # 物料编码	物料名称	原厂料号	补给方式	首选供应商	物料分类二	物料分类三	计量单位	上级物料编码	上级物料名称	总消耗量	损耗量	标准损耗率	未税采购价格	采购货币
+    total_price_rmb = r.未税采购价格 * r.总消耗量 * usd_ratio if r.采购货币 == 'USD' else r.未税采购价格 * r.总消耗量
     return {
         "item_code": r.物料编码,
         "item_name": r.物料名称,
@@ -15,7 +15,7 @@ def create_node_from_row(r, usd_ratio):
         "total_used": r.总消耗量,
         "total_loss": r.损耗量,
         "standard_used": r.标准消耗量,
-        "price": r.采购价格,
+        "price": r.未税采购价格,
         "currency": r.采购货币,
         "total_price_rmb": total_price_rmb,
         "origin_item_code": r.原厂料号,

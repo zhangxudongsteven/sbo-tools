@@ -17,6 +17,7 @@ def update_usd_ratio(usd_ratio):
         ratio = input("Press Enter USD Ratio (default 6.7): ")
         usd_ratio = float(ratio)
         print("更新汇率为： 1美元 = {0}人民币".format(usd_ratio))
+        return usd_ratio
     except Exception as e:
         print("读入美元汇率失败，采用【1美元 = {0}人民币】进行计算:{1}".format(usd_ratio, e))
         return usd_ratio
